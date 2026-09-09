@@ -1,4 +1,5 @@
 ﻿(function () {
+    "use strict";
     if (!window.hasOwnProperty("visionEditor")) {
         window.visionEditor = [];
         window.visionEditor.new = function (domContainer, options = {}) {
@@ -6,6 +7,56 @@
                 console.warn("Can't create a vision editor : Invalid DOM element.\n", domContainer);
                 throw "Invalid DOM element.";
             }
+
+            let infoSection = domContainer.querySelector('[vision-editor-type="info-overlay"]');
+
+            let actionSection = domContainer.querySelector('[vision-editor-type="actions-overlay"]');
+
+            let modalSection = domContainer.querySelector('[vision-editor-type="modal-overview"]');
+
+            let mouseAnnotationSection = domContainer.querySelector('[vision-editor-type="mouse-annotation"]');
+
+            domContainer = domContainer.querySelector('[vision-editor-type="view"]');
+
+            actionSection.querySelector(".lock").onclick = function () {
+                domContainer.viewLocked = !domContainer.viewLocked;
+
+                if (domContainer.viewLocked) {
+                    domContainer.style = "cursor:crosshair;";
+
+                    domContainer.onmousemove = function (e) {
+                        const [r, g, b, a] = document.querySelector("canvas").getContext("2d").getImageData(e.layerX, e.layerY, 1, 1).data;
+                        mouseAnnotationSection.style = `transform:translate(${e.layerX}px, ${e.layerY}px);`;
+
+                        mouseAnnotationSection.children[0].innerHTML = `(${e.layerX}, ${e.layerY})`;
+                        mouseAnnotationSection.children[1].innerHTML = `[${r}, ${g}, ${b}]`;
+                    };
+
+                    domContainer.onmouseenter = function () {
+                        mouseAnnotationSection.style = "";
+                    }
+
+                    domContainer.onmouseleave = function () {
+                        mouseAnnotationSection.style = "display:none;";
+                    }
+
+                } else {
+                    domContainer.style = "cursor:grab;";
+                    mouseAnnotationSection.style = "display:none;";
+                    domContainer.onmousemove = null;
+                    domContainer.onmouseenter = null;
+                    domContainer.onmouseleave = null;
+                }
+            }
+
+            actionSection.querySelector(".information").onclick = function () {
+                modalSection.style = "";
+            }
+
+            modalSection.onclick = function () {
+                modalSection.style = "display:none";
+            }
+
 
             if (window.visionEditor.includes(domContainer)) {
                 console.warn("Vision editor context already created aroud this DOM.\n", domContainer);
@@ -17,10 +68,14 @@
             }
 
             domContainer.onmousedown = function () {
+                if (domContainer.viewLocked)
+                    return;
                 domContainer.style = "cursor:grabbing;";
             }
 
             domContainer.onmouseup = function () {
+                if (domContainer.viewLocked)
+                    return;
                 domContainer.style = "cursor:grab;";
             }
 
@@ -40,8 +95,6 @@
                 }
                 syncVideoTransform();
             });
-
-            resizeObserver.observe(domContainer);
 
 
             var visionEditorIndex = window.visionEditor.length;
@@ -190,21 +243,47 @@
 
             domContainer.videoStream = [];
             domContainer.innerHTML = "";
-            domContainer.style = "overflow:hidden;position:relative;";
+            domContainer.style = "cursor:grab;";
+            domContainer.viewLocked = false;
+            infoSection.innerHTML = "";
             var index = 0;
             for (var vSource of domContainer.rawVideoStream) {
                 const videoViewer = document.createElement("img");
-                videoViewer.id = 'videoViewer-' + domContainer.editorIndex + "-" + index;
+                const videoViewerId = domContainer.editorIndex + "-" + index;
+                videoViewer.id = 'videoViewer-' + videoViewerId;
                 videoViewer.src = vSource;
                 videoViewer.style = "image-rendering: pixelated;position:absolute;top:0;left:0;transform-origin: top left;";
+                videoViewer.frameCount = 0;
+
+                infoSection.innerHTML +=
+                    `<div id="videoViewer-info-${videoViewerId}">
+                        <div class="camera-name"></div>
+                        <div class="image-count">0</div>
+                        <div class="fps">0</div>
+                    </div>`;
+
+                let infoSectionDom = document.getElementById(`videoViewer-info-${videoViewerId}`);
+                infoSectionDom.querySelector('.camera-name').innerHTML = `cam[${index}]`;
+
+                videoViewer.associatedInfo = {
+                    'dom': infoSectionDom,
+                    'cameraNameDom': infoSectionDom.querySelector('.camera-name'),
+                    'imageCountDom': infoSectionDom.querySelector('.image-count'),
+                    'fpsDom': infoSectionDom.querySelector('.fps')
+                };
+
+                videoViewer.lastFrame = performance.now();
 
                 videoViewer.addEventListener('load', onFirstFrame, {
                     once: true
                 });
 
+                videoViewer.addEventListener('load', () => onFrame(videoViewer));
+
                 domContainer.videoStream.push(videoViewer);
 
                 domContainer.appendChild(videoViewer);
+                index++;
             }
 
             const konvaOverlay = document.createElement("div");
@@ -326,8 +405,23 @@
                 syncVideoTransform();
             }
 
+            function onFrame(videoViewer) {
+                videoViewer.frameCount++;
+                videoViewer.associatedInfo.imageCountDom.innerHTML = videoViewer.frameCount;
+
+                const now = performance.now();
+
+                const fps = 1000 / (now - videoViewer.lastFrame);
+
+                videoViewer.lastFrame = now;
+
+                videoViewer.associatedInfo.fpsDom.innerHTML = Number.isFinite(fps) ? fps.toFixed(2) : "-";
+            }
+
             // 🖱️ Zoom
             domContainer._stage.on("wheel", function (e) {
+                if (domContainer.viewLocked)
+                    return;
                 e.evt.preventDefault();
 
                 const scaleBy = 1.05;
@@ -361,15 +455,23 @@
 
             // 🖐️ Pan
             domContainer._stage.on("dragmove", () => {
+                if (domContainer.viewLocked)
+                    return;
+
                 domContainer._stage.adaptedToViewer = false;
                 syncVideoTransform();
             });
 
             domContainer._stage.on("dblclick", (e) => {
+                if (domContainer.viewLocked)
+                    return;
+
                 adaptVideoSizeToViewer();
                 domContainer._stage.adaptedToViewer = true;
                 syncVideoTransform();
             });
+
+            resizeObserver.observe(domContainer);
 
             // init
             syncVideoTransform();

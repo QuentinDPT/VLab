@@ -8,7 +8,7 @@ namespace QMTGroup.ImageFilters;
 public interface IImageFilter
 {
     /// <summary>
-    /// Defines the filter algorithm
+    /// Defines the filter algorithm.
     /// </summary>
     /// <param name="input">The input image to process by the filter</param>
     /// <returns>The filtered image</returns>

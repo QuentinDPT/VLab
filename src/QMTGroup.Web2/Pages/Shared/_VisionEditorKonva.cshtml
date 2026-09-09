@@ -3,54 +3,133 @@
     string visionEditorId = Model["visionEditorId"];
 }
 
+<style>
+    .pos-bottom{
+        bottom: 0;
+    }
+
+    .pos-right{
+        right:0;
+    }
+
+    .fps{
+        min-width: 4.5rem;
+        text-align: right;
+    }
+
+    .fps::after{
+        content:"fps";
+        padding-left:.2rem;
+        font-size:.5rem;
+    }
+
+    .image-count {
+        min-width: 2rem;
+        text-align: right;
+        
+    }
+
+    .info-overlay > div {
+        border-bottom: solid 1px #999;
+        background: #FFF;
+        padding-left: .4rem;
+        padding-right: .4rem;
+        display:flex;
+    }
+
+    .info-overlay > div:last-child {
+        border-bottom: none;
+    }
+
+        .info-overlay > div > div {
+            margin-left: .4rem;
+            opacity: .7;
+        }
+
+        .info-overlay:hover > div > div {
+            opacity: 1;
+        }
+
+    .info-overlay > div > div:first-child {
+        margin-left: 0;
+    }
+
+
+    .modal-overview{
+        background: #5558;
+    }
+
+    .mouse-annotation{
+        background:#FFF;
+        padding: 0 .2rem .2rem .2rem;
+        font-family: monospace;
+        pointer-events: none;
+        top:0;
+        left:0;
+    }
+</style>
+
 <script src="~/lib/konva/konva.min.js"></script>
 <script src="~/js/shared/cameraKonva.js"></script>
 
-<div id="@visionEditorId" class="h-100 w-100 background-pattern position-relative overflow-hidden" style="cursor:grab;"></div>
+<div id="@visionEditorId" class="h-100 w-100 position-relative">
 
-<div class="position-absolute overflow-hidden" style="top:0; left:0;">
-    <div class="d-flex flex-column">
-        <button class="btn btn-outline-light p-0">
-            <span class="material-symbols-outlined">texture</span>
-            <!--background-->
-        </button>
+    @* First item important for the javascript usage *@
+    <div class="h-100 w-100 background-pattern position-relative overflow-hidden" vision-editor-type="view" style="cursor:grab;"></div>
 
-        <div class="dropdown">
+    <div class="info-overlay position-absolute overflow-hidden pos-bottom pos-right font-monospace" vision-editor-type="info-overlay"></div>
 
-            <button class="btn btn-outline-light p-0 dropdown-toggle"
-                    data-bs-toggle="dropdown">
+    <div class="position-absolute overflow-hidden" style="top:0; left:0;" vision-editor-type="actions-overlay">
+        <div class="d-flex flex-column">
+            <button class="btn btn-outline-light p-0">
                 <span class="material-symbols-outlined">texture</span>
+                <!--background-->
             </button>
 
-            <div class="dropdown-menu horizontal-menu p-2">
-                <button class="dropdown-item-btn btn btn-outline-secondary">
-                    Light
+            <div class="dropdown">
+
+                <button class="btn btn-outline-light p-0 dropdown-toggle"
+                        data-bs-toggle="dropdown">
+                    <span class="material-symbols-outlined">texture</span>
                 </button>
-                <button class="dropdown-item-btn btn btn-outline-secondary">
-                    Dark
-                </button>
-                <button class="dropdown-item-btn btn btn-outline-secondary">
-                    checkerboard
-                </button>
+
+                <div class="dropdown-menu horizontal-menu p-2">
+                    <button class="dropdown-item-btn btn btn-outline-secondary">
+                        Light
+                    </button>
+                    <button class="dropdown-item-btn btn btn-outline-secondary">
+                        Dark
+                    </button>
+                    <button class="dropdown-item-btn btn btn-outline-secondary">
+                        checkerboard
+                    </button>
+                </div>
+
             </div>
 
+            <button class="btn btn-outline-light p-0">
+                <span class="material-symbols-outlined">content_copy</span>
+                <!--copy image-->
+            </button>
+            <button class="btn btn-outline-light p-0">
+                <span class="material-symbols-outlined">content_copy</span>
+                <!--copy image with overlay-->
+            </button>
+            <button class="lock btn btn-outline-light p-0">
+                <span class="material-symbols-outlined">lock</span>
+                <!--lock-->
+            </button>
+            <button class="information btn btn-outline-light p-0">
+                <span class="material-symbols-outlined">info</span>
+                <!--parameters-->
+            </button>
         </div>
-
-        <button class="btn btn-outline-light p-0">
-            <span class="material-symbols-outlined">content_copy</span>
-            <!--copy image-->
-        </button>
-        <button class="btn btn-outline-light p-0">
-            <span class="material-symbols-outlined">content_copy</span>
-            <!--copy image with overlay-->
-        </button>
-        <button class="btn btn-outline-light p-0">
-            <span class="material-symbols-outlined">lock</span>
-            <!--lock-->
-        </button>
-        <button class="btn btn-outline-light p-0">
-            <span class="material-symbols-outlined">info</span>
-            <!--parameters-->
-        </button>
     </div>
+
+    <div class="position-absolute mouse-annotation" style="display:none;" vision-editor-type="mouse-annotation">
+        <div>(0, 0)</div>
+        <div>[255, 187, 12]</div>
+    </div>
+
+    <div vision-editor-type="modal-overview" class="modal-overview position-absolute top-0 bottom-0 start-0 end-0" style="display:none;"></div>
 </div>
