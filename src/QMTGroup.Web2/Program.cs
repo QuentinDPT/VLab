@@ -125,6 +125,18 @@ namespace QMTGroup.Web
                     VerticalFlip = false,
                     Rotation = QuarterRotation.Deg0,
                 });
+            cameraFactory.Create<Camera.EmguCV.Camera>(
+                new Camera.EmguCV.StartupParameters()
+                {
+                    Slot = 1,
+                },
+                new Camera.PostAcquisitionParameters()
+                {
+                    ForceGrayScale = true,
+                    HorizontalFlip = false,
+                    VerticalFlip = false,
+                    Rotation = QuarterRotation.Deg0,
+                });
             cameraFactory.Create<Camera.Halcon.Camera>(new Camera.Halcon.StartupParameters());
             cameraFactory.Create<Camera.File.Camera>(
                 new Camera.File.StartupParameters()

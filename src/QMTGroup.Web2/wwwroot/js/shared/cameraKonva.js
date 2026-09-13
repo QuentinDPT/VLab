@@ -49,8 +49,23 @@
                 }
             }
 
+            /*
+            sample
+            document.querySelector(".information").initializeModal = (e) => e.innerHTML = `<div id="mySuperId" tabindex="-1" role="dialog"><div class="modal-dialog" role="document"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">ℹ️ Information</h5></div><div class="modal-body"><p>J'ai des informations a afficher par ici.</p></div></div></div></div>`;
+            document.querySelector(".information").onModal = function(e) { }
+
+            //*/
+
             actionSection.querySelector(".information").onclick = function () {
+                var buttonContext = actionSection.querySelector(".information");
+
+                if (typeof buttonContext.initializeModal === "function")
+                    buttonContext.initializeModal(modalSection);
+
                 modalSection.style = "";
+
+                if (typeof buttonContext.onModal === "function")
+                    buttonContext.onModal();
             }
 
             modalSection.onclick = function () {
